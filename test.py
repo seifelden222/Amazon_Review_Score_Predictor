@@ -1,13 +1,17 @@
 import joblib
 import pandas as pd
 from main import ScorePredictor
+import logging
+
+# Configure logging for tests
+logging.basicConfig(level=logging.INFO, format='%(asctime)s %(levelname)s: %(message)s')
 
 
 def load_and_test_model(model_path='model.joblib'):
 
     try:
         # Load the saved model
-        print(f"Loading model from {model_path}...")
+        logging.info(f"Loading model from {model_path}...")
         predictor = ScorePredictor()
         model_data = joblib.load(model_path)
 
@@ -18,7 +22,7 @@ def load_and_test_model(model_path='model.joblib'):
         predictor.vectorizer = model_data['vectorizer']
         predictor.model = model_data['model']
 
-        print("Model loaded successfully!")
+        logging.info("Model loaded successfully!")
 
         # Test cases that should cover all score ranges
         test_cases = [
@@ -50,17 +54,16 @@ def load_and_test_model(model_path='model.joblib'):
 
         # Display results
         results = pd.DataFrame(results)
-        print("\nTest Results:")
-        print(results.to_string(index=False))
+        logging.info("Test Results:\n%s", results.to_string(index=False))
 
         # Calculate overall accuracy
         avg_error = results['Error'].mean()
-        print(f"\nAverage Error: {avg_error:.2f}")
+        logging.info("Average Error: %.2f", avg_error)
 
         return results
 
     except Exception as e:
-        print(f"Error during testing: {str(e)}")
+        logging.error(f"Error during testing: {str(e)}")
         return None
 
 
