@@ -1,0 +1,16 @@
+{
+  "train_accuracy": 0.8999999761581421,
+  "validation_accuracy": 0.0,
+  "test_accuracy": 0.0,
+  "test_loss": 1.6054617166519165,
+  "label_offset": 1,
+  "classes": [
+    1,
+    2,
+    3,
+    4,
+    5
+  ],
+  "text_column": "Text",
+  "score_column": "Score"
+}

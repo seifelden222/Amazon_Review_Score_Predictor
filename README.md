@@ -1,72 +1,121 @@
-# 📊 Amazon Review Score Predictor
+# Amazon Review Score Predictor
 
-A machine learning model that predicts product review scores (1-5⭐) based on text content.
+Deep Learning model for Amazon review score classification.
 
-## 🌟 Features
+The project classifies review text into one of five score classes: `1`, `2`, `3`, `4`, or `5`. It uses a TensorFlow/Keras text classification pipeline with a shared preprocessing function for training and inference.
 
-| Feature | Description |
-|---------|-------------|
-| 🔠 Text Processing | Tokenization, lemmatization, stopword removal |
-| 📊 Vectorization | TF-IDF with 5000 features |
-| 🌳 Model | Random Forest Regressor |
-| 📈 Evaluation | MSE, RMSE, R² metrics |
-| 💾 Persistence | Save/load model functionality |
-
-## 🛠️ Installation
+## Installation
 
 ```bash
-# Clone repository
-git clone https://github.com/Mohamed-Aboelela-dev/Amazon_Review_Score_Predictor.git
-cd sign_language_detection
-
-# Install dependencies
+git clone https://github.com/seifelden222/Amazon_Review_Score_Predictor.git
+cd Amazon_Review_Score_Predictor
+python -m venv .venv
+source .venv/bin/activate
 pip install -r requirements.txt
+```
 
-# Download NLTK data
-python -c "import nltk; nltk.download('punkt'); nltk.download('stopwords'); nltk.download('wordnet')"
-````
-Put the "Amazon Customer Reviews.csv" in the "Data" folder.
+## Dataset
 
-## 🚀 Quick Start
+- Put the dataset file at `Data/Amazon Customer Reviews.csv`
+- Expected columns:
+  - `Text`: review text
+  - `Score`: review score from `1` to `5`
 
-#### Train the model:
+You can also pass a custom dataset path and custom column names through CLI arguments.
+
+## Training
+
 ```bash
 python main.py
 ```
 
-#### Test the model:
+Example with options:
+
+```bash
+python main.py --data "Data/Amazon Customer Reviews.csv" --text-column Text --score-column Score --epochs 10 --batch-size 32
+```
+
+Saved artifacts go to `artifacts/review_score_classifier/` by default:
+
+- `model.keras`
+- `metadata.json`
+- `classification_report.txt`
+- `confusion_matrix.csv`
+- `sample_predictions.txt`
+
+## Testing / Inference
+
+Run demo predictions using the saved model:
+
 ```bash
 python test.py
 ```
 
-## 📂 Project Structure
+Run prediction on your own reviews:
+
+```bash
+python test.py --text "This product is amazing and durable." --text "Terrible quality and not worth the money."
 ```
+
+## Model Architecture
+
+The classifier uses:
+
+- `TextVectorization`
+- `Embedding`
+- `Bidirectional(LSTM)`
+- `Dense + Dropout`
+- `Dense(5, softmax)`
+
+Compile settings:
+
+- Optimizer: `adam`
+- Loss: `sparse_categorical_crossentropy`
+- Metric: `accuracy`
+
+## Project Structure
+
+```text
 .
-├── main.py             # 🏋️ Training script
-├── test.py             # 🧪 Testing script
-├── requirements.txt    # 📦 Dependencies
-├── model.joblib        # 💾 Saved model (created after training)
-└── README.md           # 📖 This file
+├── Data/
+│   └── Amazon Customer Reviews.csv
+├── artifacts/
+│   └── review_score_classifier/
+├── main.py
+├── test.py
+├── utils.py
+├── run_training.py
+├── requirements.txt
+└── README.md
 ```
 
-## 📊 Sample Output
+## Example Training Output
 
-Test Results:
-Text                                  Expected  Predicted  Error
-This product is perfect in every way        5        4.8     0.2
-Absolutely terrible quality                 1        1.2     0.2
-Mediocre but works okay                     3        2.9     0.1
+```text
+Training accuracy: 0.9125
+Validation accuracy: 0.8500
+Test accuracy: 0.8333
 
-Average Error: 0.17
-
-## 🛠️ Configuration
-Edit these parameters in main.py:
+Classification report:
+              precision    recall  f1-score   support
+1                1.0000    1.0000    1.0000         2
+2                0.5000    1.0000    0.6667         1
+3                1.0000    0.5000    0.6667         2
+4                1.0000    1.0000    1.0000         2
+5                1.0000    1.0000    1.0000         2
 ```
-CONFIG = {
-    'data_path': 'Amazon Customer Reviews.csv',  # 📂 Your dataset
-    'text_column': 'Text',                      # 🔤 Text column name
-    'score_column': 'Score',                    # ⭐ Rating column name
-    'save_path': 'model.joblib',                # 💾 Model save path
-    'num_rows': 200                             # 🔢 Rows to use (None for all)
-}
+
+Sample prediction format:
+
+```text
+Text: This product is perfect in every way.
+True label: 5
+Predicted label: 5
+Class probabilities: [0.0012, 0.0031, 0.0104, 0.0815, 0.9038]
 ```
+
+## Notes
+
+- Labels are converted internally from `1-5` to `0-4` for training, then mapped back to `1-5` for reports and predictions.
+- The same `clean_text()` preprocessing function is used in both training and inference to avoid training-serving skew.
+- The saved Keras model contains the vectorization layer, so inference uses the same vocabulary and text pipeline learned during training.

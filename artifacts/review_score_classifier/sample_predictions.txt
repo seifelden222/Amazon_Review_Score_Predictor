@@ -1,0 +1,14 @@
+Text: better than expected
+True label: 4
+Predicted label: 3
+Class probabilities: [0.1963, 0.2001, 0.2041, 0.2033, 0.1962]
+
+Text: mediocre but works okay
+True label: 3
+Predicted label: 4
+Class probabilities: [0.1972, 0.2, 0.2029, 0.2035, 0.1964]
+
+Text: absolutely terrible quality
+True label: 1
+Predicted label: 3
+Class probabilities: [0.1963, 0.2001, 0.2041, 0.2033, 0.1962]

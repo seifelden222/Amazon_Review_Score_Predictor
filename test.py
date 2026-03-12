@@ -1,71 +1,96 @@
-import joblib
-import pandas as pd
-from main import ScorePredictor
+import argparse
 import logging
+from pathlib import Path
 
-# Configure logging for tests
-logging.basicConfig(level=logging.INFO, format='%(asctime)s %(levelname)s: %(message)s')
+import numpy as np
+import tensorflow as tf
+
+from utils import (
+    DEFAULT_MODEL_DIR,
+    build_sample_prediction_lines,
+    clean_text,
+    load_json,
+)
 
 
-def load_and_test_model(model_path='model.joblib'):
+logging.basicConfig(level=logging.INFO, format="%(asctime)s %(levelname)s: %(message)s")
+
+
+DEFAULT_REVIEWS = [
+    ("This product is perfect in every way.", 5),
+    ("Absolutely terrible quality and I regret buying it.", 1),
+    ("It is okay for the price, nothing special.", 3),
+    ("Very solid purchase, I would buy it again.", 4),
+    ("Stopped working after two days, complete waste of money.", 1),
+]
+
+
+def parse_args():
+    parser = argparse.ArgumentParser(description="Run inference using the saved Keras classifier.")
+    parser.add_argument(
+        "--model-dir",
+        default=str(DEFAULT_MODEL_DIR),
+        help="Directory containing model.keras and metadata.json.",
+    )
+    parser.add_argument(
+        "--text",
+        action="append",
+        dest="texts",
+        help="Review text to classify. Use multiple times for multiple reviews.",
+    )
+    return parser.parse_args()
+
+
+def load_saved_model(model_dir):
+    model_path = Path(model_dir) / "model.keras"
+    metadata_path = Path(model_dir) / "metadata.json"
+
+    if not model_path.exists():
+        raise FileNotFoundError(f"Saved model not found at {model_path}")
+    if not metadata_path.exists():
+        raise FileNotFoundError(f"Metadata file not found at {metadata_path}")
+
+    model = tf.keras.models.load_model(model_path)
+    metadata = load_json(metadata_path)
+    return model, metadata
+
+
+def run_inference(model_dir, review_texts):
+    model, metadata = load_saved_model(model_dir)
+    cleaned_reviews = [clean_text(text) for text in review_texts]
+    probabilities = model.predict(np.array(cleaned_reviews, dtype=object), verbose=0)
+    predicted_indices = np.argmax(probabilities, axis=1)
+    predicted_labels = (predicted_indices + 1).tolist()
+
+    sample_lines = build_sample_prediction_lines(
+        texts=review_texts,
+        true_labels=["N/A"] * len(review_texts),
+        predicted_labels=predicted_labels,
+        probabilities=probabilities,
+    )
+
+    logging.info(
+        "Loaded model trained on text column '%s' and score column '%s'.",
+        metadata["text_column"],
+        metadata["score_column"],
+    )
+    logging.info("Predictions:\n%s", "\n\n".join(sample_lines))
+    return sample_lines
+
+
+def main():
+    args = parse_args()
+    if args.texts:
+        review_texts = args.texts
+    else:
+        review_texts = [text for text, _ in DEFAULT_REVIEWS]
 
     try:
-        # Load the saved model
-        logging.info(f"Loading model from {model_path}...")
-        predictor = ScorePredictor()
-        model_data = joblib.load(model_path)
-
-        # Verify loaded components
-        if not all(key in model_data for key in ['vectorizer', 'model']):
-            raise ValueError("Model file is missing required components")
-
-        predictor.vectorizer = model_data['vectorizer']
-        predictor.model = model_data['model']
-
-        logging.info("Model loaded successfully!")
-
-        # Test cases that should cover all score ranges
-        test_cases = [
-            ("This product is perfect in every way", 5),
-            ("Absolutely terrible quality", 1),
-            ("Mediocre but works okay", 3),
-            ("Better than expected", 4),
-            ("Worst purchase of my life", 1),
-            ("Excellent value for the price", 5),
-            ("Average product with some flaws", 2),
-            ("Good but could be improved", 4),
-            ("Complete waste of money", 1),
-            ("Highly recommended to everyone", 5),
-            ("very good", 5),
-        ]
-
-        results = []
-        for text, expected in test_cases:
-            # Vectorize and predict
-            vec = predictor.vectorizer.transform([text])
-            pred = predictor.model.predict(vec)[0]
-
-            results.append({
-                'Text': text,
-                'Expected': expected,
-                'Predicted': round(pred, 1),
-                'Error': abs(expected - round(pred, 1))
-            })
-
-        # Display results
-        results = pd.DataFrame(results)
-        logging.info("Test Results:\n%s", results.to_string(index=False))
-
-        # Calculate overall accuracy
-        avg_error = results['Error'].mean()
-        logging.info("Average Error: %.2f", avg_error)
-
-        return results
-
-    except Exception as e:
-        logging.error(f"Error during testing: {str(e)}")
-        return None
+        run_inference(args.model_dir, review_texts)
+    except Exception as exc:
+        logging.error("Inference failed: %s", exc)
+        raise SystemExit(1) from exc
 
 
 if __name__ == "__main__":
-    test_results = load_and_test_model()
+    main()

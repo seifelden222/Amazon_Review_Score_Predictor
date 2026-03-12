@@ -1,0 +1,49 @@
+========================================================================
+AMAZON REVIEW SCORE CLASSIFICATION REPORT
+========================================================================
+
+[Accuracy Summary]
+Training accuracy     : 0.9000
+Validation accuracy   : 0.0000
+Test accuracy         : 0.0000
+Training rows         : 10
+Validation rows       : 2
+Test rows             : 3
+
+[Classification Report]
+precision    recall  f1-score   support
+
+           1     0.0000    0.0000    0.0000       1.0
+           3     0.0000    0.0000    0.0000       1.0
+           4     0.0000    0.0000    0.0000       1.0
+
+    accuracy                         0.0000       3.0
+   macro avg     0.0000    0.0000    0.0000       3.0
+weighted avg     0.0000    0.0000    0.0000       3.0
+
+[Confusion Matrix]
+True\Pred        1       2       3       4       5
+1                0       0       1       0       0
+2                0       0       0       0       0
+3                0       0       0       1       0
+4                0       0       1       0       0
+5                0       0       0       0       0
+
+[Sample Predictions]
+Sample 1
+Text: better than expected
+True label: 4
+Predicted label: 3
+Class probabilities: [0.1963, 0.2001, 0.2041, 0.2033, 0.1962]
+------------------------------------------------------------------------
+Sample 2
+Text: mediocre but works okay
+True label: 3
+Predicted label: 4
+Class probabilities: [0.1972, 0.2, 0.2029, 0.2035, 0.1964]
+------------------------------------------------------------------------
+Sample 3
+Text: absolutely terrible quality
+True label: 1
+Predicted label: 3
+Class probabilities: [0.1963, 0.2001, 0.2041, 0.2033, 0.1962]
